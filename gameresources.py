@@ -10,8 +10,10 @@ walkLeft = [pygame.image.load('resources/L1.png'), pygame.image.load('resources/
 screensize_x = 500
 screensize_y = 480
 
+characterPositions = []
+
 win = pygame.display.set_mode((screensize_x, screensize_y))
-pygame.display.set_caption("My First Game")
+pygame.display.set_caption("Goblin Saga")
 
 bulletSound = pygame.mixer.Sound('resources/bullet.wav')
 hitSound = pygame.mixer.Sound('resources/hit.wav')

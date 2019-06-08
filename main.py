@@ -7,6 +7,7 @@ font = pygame.font.SysFont('comicsans', 30, True)
 score = 0
 shootLoop = 0
 roundNo = 0
+numOfEnemy = 0
 newRound = True
 man = None
 goblinArray = []
@@ -18,17 +19,23 @@ def main():
 
     while True:
         clock.tick(27)
+        global characterPositions
+        characterPositions.clear()
+        global roundNo
+        roundNo += 1
+        global numOfEnemy
+        numOfEnemy = roundNo
+        characterPositions = evaluateCharacterPositions(characterPositions, numOfEnemy + 1)
+        man = Player(characterPositions[0], 410, 64, 64)
         goblinArray.clear()
-        man = Player(300, 410, 64, 64)
-        goblin = Enemy(100, 415, 64, 64, 450)
-        goblinArray.append(goblin)
-        goblin = Enemy(200, 415, 64, 64, 450)
-        goblinArray.append(goblin)
+        for i in range(0, numOfEnemy):
+            goblin = Enemy(i+1, characterPositions[i+1], 415, 64, 64, 450, 3)
+            goblinArray.append(goblin)
+        # goblin = Enemy(2, characterPositions[2], 415, 64, 64, 450, 3)
+        # goblinArray.append(goblin)
         bullets = []
         global shootLoop
         shootLoop = 0
-        global roundNo
-        roundNo += 1
         global newRound
         newRound = True
         run = True
@@ -84,6 +91,9 @@ def checkPause(keys):
             fontpaused = pygame.font.SysFont('comicsans', 50)
             text = fontpaused.render('Game Paused', 1, (0, 0, 0))
             win.blit(text, (screensize_x/2 - text.get_width()/2, screensize_y/2 - text.get_height()/2))
+            fontpaused2 = pygame.font.SysFont('comicsans', 31)
+            text2 = fontpaused2.render('Press Enter to resume', 1, (0, 0, 0))
+            win.blit(text2, (screensize_x / 2 - text.get_width() / 2, screensize_y / 2 - text.get_height() / 2 + 50))
             pygame.display.update()
             for event in pygame.event.get():
                 if event.type == pygame.KEYDOWN:
@@ -122,6 +132,7 @@ def checkManMovement(man, keys):
     else:
         man.walkCount = 0
         man.standing = True
+    characterPositions[0] = man.x
 
 def bulletShoot(bullets, man, shootLoop, keys):
     # if type(keys) is tuple:
@@ -143,6 +154,7 @@ def redrawGameWindow(man, goblinArray, bullets):
     man.draw(win)
     for goblin in goblinArray:
         goblin.draw(win)
+        characterPositions[goblin.id] = goblin.x
     for bullet in bullets:
         bullet.draw(win)
         print("Redraw "+str(bullets.index(bullet))+"  "+str(bullet.x))
@@ -153,7 +165,10 @@ def manGoblinHit(man, goblin):
     if goblin.visible:
         if man.hitbox[1] < goblin.hitbox[1] + goblin.hitbox[3] and man.hitbox[1] + man.hitbox[3] > goblin.hitbox[1]:
             if man.hitbox[0] + man.hitbox[2] > goblin.hitbox[0] and man.hitbox[0] < goblin.hitbox[0] + goblin.hitbox[2]:
-                man.hit()
+                global numOfEnemy
+                global characterPositions
+                characterPositions = evaluateCharacterPositions(characterPositions, numOfEnemy + 1)
+                man.hit(characterPositions[0])
                 score -= 5
 
 def goblinBulletHit(goblinArray, bullets):
@@ -162,7 +177,7 @@ def goblinBulletHit(goblinArray, bullets):
         for bullet in bullets:
             #print("Compare - "+str(goblinArray.index(goblin))+" and "+str(bullets.index(bullet)))
             for goblin in goblinArray:
-                if goblin.visible:
+                if goblin.visible and len(bullets)>0:
                     if bullet.y - bullet.radius < goblin.hitbox[1] + goblin.hitbox[3] and bullet.y + bullet.radius > \
                             goblin.hitbox[1]:
                         if bullet.x + bullet.radius > goblin.hitbox[0] and bullet.x - bullet.radius < goblin.hitbox[0] + \
@@ -170,7 +185,7 @@ def goblinBulletHit(goblinArray, bullets):
                             score += 1
                             goblin.hit()
                             bullets.pop(bullets.index(bullet))
-                            continue
+                            break
             if bullet.x < 500 and bullet.x > 0:
                 bullet.x += bullet.vel
                 # print("Hit " +str(bullets.index(bullet))+" "+str(bullet.x))
@@ -196,6 +211,28 @@ def executeRound(man, goblinArray, bullets, keys, roundNo):
     checkManJump(man, keys)
     redrawGameWindow(man, goblinArray, bullets)
     return bullets
+
+def evaluateCharacterPositions(characterPositions, noOfCharacters):
+    characterPositions = list(characterPositions)
+    pos = int((screensize_x - 50) / 3)
+    if len(characterPositions) == 0:
+        for i in range(0, noOfCharacters):
+            characterPositions.append(pos * (i+1))
+    else:
+        charPosCopy = list(characterPositions)
+        charPosCopy[0] = 0
+        charPosCopy.append(screensize_x - 50)
+        charPosCopy.sort()
+        maxdiff = 0
+        maxdiffpos = -1
+        for i in range(0, len(charPosCopy)-1):
+            if charPosCopy[i+1] - charPosCopy[i] > maxdiff:
+                maxdiff = charPosCopy[i+1] - charPosCopy[i]
+                maxdiffpos = i
+        if maxdiff != 0 and maxdiffpos != -1:
+            characterPositions[0] = charPosCopy[maxdiffpos] + int(maxdiff / 2)
+    return characterPositions
+
 if __name__ == '__main__':
     main()
 

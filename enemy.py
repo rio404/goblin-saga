@@ -16,12 +16,13 @@ class Enemy(object):
                      pygame.image.load('resources/L9E.png'), pygame.image.load('resources/L10E.png'),
                      pygame.image.load('resources/L11E.png')]
 
-    def __init__(self, x, y, width, height, end):
+    def __init__(self, id, x, y, width, height, end, vel):
+        self.id = id
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.vel = 3
+        self.vel = vel
         self.end = end
         self.path = [0, self.end]
         self.walkCount = 0
@@ -61,6 +62,7 @@ class Enemy(object):
                 self.vel = self.vel * -1
                 self.walkCount += 1
 
+
     def hit(self):
         if self.health > 0:
             self.health -=1
@@ -68,3 +70,8 @@ class Enemy(object):
             self.visible = False
         hitSound.play()
         print('HIT')
+
+    # def updateCharacterPositions(self, characterPositions):
+    #     characterPositions = list(characterPositions)
+    #     characterPositions[self.id] = self.x
+    #     return characterPositions
